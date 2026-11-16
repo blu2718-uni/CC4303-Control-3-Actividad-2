@@ -1,13 +1,19 @@
+import random
 import socket
 import sys
 from parser import *
 
 def enviar(ip_final, puerto_final, ttl, mensaje, ip_envio, puerto_envio):
+    mensaje_bytes = mensaje.encode()
     paquete_plain = {
         "IP": ip_final,
         "Puerto": int(puerto_final),
         "TTL": int(ttl),
-        "Mensaje": mensaje.encode(),
+        "ID": random.randint(0, 255),  # ID ocupa 1 byte
+        "Offset": 0,
+        "Tamaño": len(mensaje_bytes),
+        "FLAG": 0,
+        "Mensaje": mensaje_bytes,
     }
 
     paquete_bytes = create_packet(paquete_plain)
