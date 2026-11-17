@@ -58,7 +58,22 @@ def tabulador(archivo):
     return tabla
 
 def fragment_IP_packet(IP_packet, MTU):
-    pass
+    fragmentos = []
+    
+    if len(IP_packet) <= MTU:
+        fragmentos = [IP_packet]
+        return fragmentos
+        
+    parseado = parse_packet(IP_packet)
+    trozos = parseado["Tamaño"] // (MTU - 15)
+    
+    if parseado["Tamaño"] % (MTU - 15) != 0:
+        trozos += 1
+
+    for frag in range(trozos):
+
+    return fragmentos
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
