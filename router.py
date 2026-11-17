@@ -58,7 +58,37 @@ def tabulador(archivo):
     return tabla
 
 def fragment_IP_packet(IP_packet, MTU):
-    pass
+    fragmentos = []
+    
+    if len(IP_packet) <= MTU:
+        fragmentos = [IP_packet]
+        return fragmentos
+        
+    parseado = parse_packet(IP_packet)
+    trozos = parseado["Tamaño"] // (MTU - 15)
+    
+    if parseado["Tamaño"] % (MTU - 15) != 0:
+        trozos += 1
+    
+    ultimo = False
+    for i in range(trozos):
+        inicio = i * (MTU - 15)
+        ultimo = True if i == trozos - 1 else False
+        
+        fragmento = {
+                "IP": parseado["IP"],
+                "Puerto": parseado["Puerto"],
+                "TTL": parseado["TTL"],
+                "ID": parseado["ID"],
+                "Offset": parseado["Offset"] + inicio,
+                "Tamaño": len(parseado["Mensaje"][inicio:inicio + (MTU - 15)]),
+                "FLAG": 1 if not ultimo else parseado["FLAG"],
+                "Mensaje": parseado["Mensaje"][inicio:inicio + (MTU - 15)]
+        }
+        
+        fragmentos.append(create_packet(fragmento))
+    
+    return fragmentos
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
