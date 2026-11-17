@@ -1,4 +1,4 @@
-from router import fragment_IP_packet
+from router import fragment_IP_packet, reassemble_IP_packet
 from parser import *
 
 IP_packet_v1 = (
@@ -11,13 +11,22 @@ IP_packet_v1 = (
     b"\x00"               # FLAG
     b"adios"              # Mensaje
 )
-
+print("Tests de fragment_IP_packet\n")
 print(list(map(parse_packet, fragment_IP_packet(IP_packet_v1, 20))))
-
 print(list(map(parse_packet, fragment_IP_packet(IP_packet_v1, 19))))
-
 print(list(map(parse_packet, fragment_IP_packet(IP_packet_v1, 18))))
-
 print(list(map(parse_packet, fragment_IP_packet(IP_packet_v1, 17))))
-
 print(list(map(parse_packet, fragment_IP_packet(IP_packet_v1, 16))))
+print()
+
+print("Tests de reassemble_IP_packet\n")
+IP_packet_v2 = reassemble_IP_packet(fragment_IP_packet(IP_packet_v1, 20))
+print("IP_packet_v1 = IP_packet_v2 ? {}".format(IP_packet_v1 == IP_packet_v2))
+IP_packet_v2 = reassemble_IP_packet(fragment_IP_packet(IP_packet_v1, 19))
+print("IP_packet_v1 = IP_packet_v2 ? {}".format(IP_packet_v1 == IP_packet_v2))
+IP_packet_v2 = reassemble_IP_packet(fragment_IP_packet(IP_packet_v1, 18))
+print("IP_packet_v1 = IP_packet_v2 ? {}".format(IP_packet_v1 == IP_packet_v2))
+IP_packet_v2 = reassemble_IP_packet(fragment_IP_packet(IP_packet_v1, 17))
+print("IP_packet_v1 = IP_packet_v2 ? {}".format(IP_packet_v1 == IP_packet_v2))
+IP_packet_v2 = reassemble_IP_packet(fragment_IP_packet(IP_packet_v1, 16))
+print("IP_packet_v1 = IP_packet_v2 ? {}".format(IP_packet_v1 == IP_packet_v2))

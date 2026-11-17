@@ -100,15 +100,36 @@ def reassemble_IP_packet(fragment_list):
         else:
             return None
 
-    final_frag = b''
-    for frag in fragment_list:
-        # crear variable vacia donde se ponen los mensajes de los fragmentos
-        # para verificar orden, inicialmente se busca offset 0, si lo encuentra pega el mensaje em la variable y enla siguiente iteracion busca el offset = offset (anterior) + tamaño (anterior)
-        # con esto (en teoria) deberia armar el mensaje correctamente o retornar None si falta un pedazo
+    final_message = b''
+    found = True
+    cont = True
+    i = 0
+    while found and cont:
+        found = False
+        for frag in fragment_list:
+            parsed_fragment = parse_packet(frag)
+            if parsed_fragment["Offset"] == i:
+                found = True
+                i += parsed_fragment["Tamaño"]
+                final_message += parsed_fragment["Mensaje"]
+                if not parsed_fragment["FLAG"]:
+                    cont = False
+                break
+        if not found:
+            return None
 
-        # luego de armar el mensaje se arma el header real
-        pass
-    return
+    first_parsed = parse_packet(fragment_list[0])
+    packet = {
+        "IP": first_parsed["IP"],
+        "Puerto": first_parsed["Puerto"],
+        "TTL": first_parsed["TTL"],
+        "ID": first_parsed["ID"],
+        "Offset": 0,
+        "Tamaño": len(final_message),
+        "FLAG": 0,
+        "Mensaje": final_message,
+    }
+    return create_packet(packet)
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
