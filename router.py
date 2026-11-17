@@ -83,7 +83,7 @@ def fragment_IP_packet(IP_packet, MTU):
                 "Offset": parseado["Offset"] + inicio,
                 "Tamaño": len(parseado["Mensaje"][inicio:inicio + (MTU - 15)]),
                 "FLAG": 1 if not ultimo else parseado["FLAG"],
-                "Mensaje": parseado["Mensaje"][inicio:incio + (MTU - 15)]
+                "Mensaje": parseado["Mensaje"][inicio:inicio + (MTU - 15)]
         }
         
         fragmentos.append(create_packet(fragmento))
