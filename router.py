@@ -128,8 +128,9 @@ if __name__ == "__main__":
                     f"Redirigiendo paquete '{mensaje_parseado['Mensaje'].decode()}' con destino final ('{mensaje_parseado['IP']}', {mensaje_parseado['Puerto']}) desde ('{ip}', {puerto}) hacia {siguiente_salto}"
                 )
                 mensaje_parseado["TTL"] -= 1
-                mensaje_reenviar = create_packet(mensaje_parseado)
-                sckt.sendto(mensaje_reenviar, siguiente_salto)
+                mensaje_reenviar = fragment_IP_packet(create_packet(mensaje_parseado), siguiente_salto["MTU"])
+                for frag in mensaje_reenviar:
+                    sckt.sendto(frag, siguiente_salto)
             else:
                 print(
                     f"No hay rutas hacia ('{mensaje_parseado['IP']}', {mensaje_parseado['Puerto']}) para el paquete '{mensaje_parseado['Mensaje'].decode()}'"
