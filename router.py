@@ -90,6 +90,25 @@ def fragment_IP_packet(IP_packet, MTU):
     
     return fragmentos
 
+def reassemble_IP_packet(fragment_list):
+    if len(fragment_list) == 1:
+        parsed_fragment = parse_packet(fragment_list[0])
+        fragment_flag = parsed_fragment["FLAG"]
+        fragment_offset = parsed_fragment["Offset"]
+        if fragment_offset == fragment_flag == 0:
+            return fragment_list[0]
+        else:
+            return None
+
+    final_frag = b''
+    for frag in fragment_list:
+        # crear variable vacia donde se ponen los mensajes de los fragmentos
+        # para verificar orden, inicialmente se busca offset 0, si lo encuentra pega el mensaje em la variable y enla siguiente iteracion busca el offset = offset (anterior) + tamaño (anterior)
+        # con esto (en teoria) deberia armar el mensaje correctamente o retornar None si falta un pedazo
+
+        # luego de armar el mensaje se arma el header real
+        pass
+    return
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
