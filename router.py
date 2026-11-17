@@ -72,6 +72,7 @@ def fragment_IP_packet(IP_packet, MTU):
     
     ultimo = False
     for i in range(trozos):
+        inicio = i * (MTU - 15)
         ultimo = True if i == trozos - 1 else False
         
         fragmento = {
@@ -79,13 +80,13 @@ def fragment_IP_packet(IP_packet, MTU):
                 "Puerto": parseado["Puerto"],
                 "TTL": parseado["TTL"],
                 "ID": parseado["ID"],
-                "Offset": i,
-                "Tamaño": (MTU - 15) if not ultimo else parseado["Tamaño"] % (MTU - 15),
-                "FLAG": 1 if not ultimo else 0,
-                "Mensaje": parseado["Mensaje"][i:i + (MTU - 15)] if not ultimo else parseado["Mensaje"][i:]
+                "Offset": parseado["Offset"] + inicio,
+                "Tamaño": len(parseado["Mensaje"][inicio:inicio + (MTU - 15)]),
+                "FLAG": 1 if not ultimo else parseado["FLAG"],
+                "Mensaje": parseado["Mensaje"][inicio:inicio + (MTU - 15)]
         }
         
-        fragmentos.append(fragmento)
+        fragmentos.append(create_packet(fragmento))
     
     return fragmentos
 
