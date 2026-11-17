@@ -19,7 +19,7 @@ Para levantar un router (uno por terminal):
 
 ```bash
 python3 router.py <IP> <puerto> <archivo_de_rutas>
-# ej: python3 router.py 127.0.0.1 8881 rutas/v5/rutas_R1_v5.txt
+# ej: python3 router.py 127.0.0.1 8881 rutas/v3/rutas_R1_v3_mtu.txt
 ```
 
 Para enviar un paquete:

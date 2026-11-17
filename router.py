@@ -12,9 +12,9 @@ def cargar_rutas(archivo):
     for linea in tabulador(archivo):
         clave = (linea["Red"], linea["Puerto Inicial"], linea["Puerto Final"])
         if clave in rutas:
-            rutas[clave].append((linea["IP Salto"], linea["Puerto Salto"], linea["MTU"]))
+            rutas[clave].append((linea["IP Salto"], linea["Puerto Salto"], int(linea["MTU"])))
         else:
-            rutas[clave] = [(linea["IP Salto"], linea["Puerto Salto"], linea["MTU"])]
+            rutas[clave] = [(linea["IP Salto"], linea["Puerto Salto"], int(linea["MTU"]))]
 
 
 def en_red(ip, red):
@@ -147,6 +147,8 @@ if __name__ == "__main__":
 
     sckt.bind(dir)
 
+    d = {}
+
     while True:
         mensaje, direccion = sckt.recvfrom(BUFFER_SIZE)
         mensaje_parseado = parse_packet(mensaje)
@@ -157,6 +159,11 @@ if __name__ == "__main__":
         elif mensaje_parseado["IP"] == ip and mensaje_parseado["Puerto"] == puerto:
             print(f"Se recibió un mensaje de: {direccion}")
             print(mensaje_parseado["Mensaje"].decode())
+            if f"{mensaje_parseado["ID"]}" in d:
+                d[f"{mensaje_parseado["ID"]}"].append(mensaje)
+            else:
+                d[f"{mensaje_parseado["ID"]}"] = [mensaje]
+            print(d)
         else:
             print(f"Se recibió un mensaje de: {direccion}")
             siguiente_salto = check_routes(
@@ -168,9 +175,9 @@ if __name__ == "__main__":
                     f"Redirigiendo paquete '{mensaje_parseado['Mensaje'].decode()}' con destino final ('{mensaje_parseado['IP']}', {mensaje_parseado['Puerto']}) desde ('{ip}', {puerto}) hacia {siguiente_salto}"
                 )
                 mensaje_parseado["TTL"] -= 1
-                mensaje_reenviar = fragment_IP_packet(create_packet(mensaje_parseado), siguiente_salto["MTU"])
+                mensaje_reenviar = fragment_IP_packet(create_packet(mensaje_parseado), siguiente_salto[2])
                 for frag in mensaje_reenviar:
-                    sckt.sendto(frag, siguiente_salto)
+                    sckt.sendto(frag, siguiente_salto[:2])
             else:
                 print(
                     f"No hay rutas hacia ('{mensaje_parseado['IP']}', {mensaje_parseado['Puerto']}) para el paquete '{mensaje_parseado['Mensaje'].decode()}'"
