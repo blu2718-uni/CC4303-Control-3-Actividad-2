@@ -12,9 +12,9 @@ def cargar_rutas(archivo):
     for linea in tabulador(archivo):
         clave = (linea["Red"], linea["Puerto Inicial"], linea["Puerto Final"])
         if clave in rutas:
-            rutas[clave].append((linea["IP Salto"], linea["Puerto Salto"]))
+            rutas[clave].append((linea["IP Salto"], linea["Puerto Salto"], linea["MTU"]))
         else:
-            rutas[clave] = [(linea["IP Salto"], linea["Puerto Salto"])]
+            rutas[clave] = [(linea["IP Salto"], linea["Puerto Salto"], linea["MTU"])]
 
 
 def en_red(ip, red):
@@ -51,11 +51,14 @@ def tabulador(archivo):
                     "Puerto Final": int(elementos[2]),
                     "IP Salto": elementos[3],
                     "Puerto Salto": int(elementos[4]),
+                    "MTU": int(elementos[5])
                 }
             )
 
     return tabla
 
+def fragment_IP_packet(IP_packet, MTU):
+    pass
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:

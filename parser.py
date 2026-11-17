@@ -12,7 +12,11 @@ def parse_packet(IP_packet):
         "IP": ip_decodificada,
         "Puerto": int.from_bytes(IP_packet[4:6], "big"),
         "TTL": IP_packet[6],
-        "Mensaje": IP_packet[7:],
+        "ID": IP_packet[7],
+        "Offset": int.from_bytes(IP_packet[8:10], "big"),
+        "Tamaño": int.from_bytes(IP_packet[10:14], "big"),
+        "FLAG": IP_packet[14],
+        "Mensaje": IP_packet[15:],
     }
 
     return paquete
@@ -25,6 +29,11 @@ def create_packet(parsed_IP_packet):
     for i in l_ip:
         ip += int.to_bytes(int(i), 1)
 
-    port = int.to_bytes(parsed_IP_packet["Puerto"], 2)
+    puerto = int.to_bytes(parsed_IP_packet["Puerto"], 2)
     ttl = int.to_bytes(parsed_IP_packet["TTL"])
-    return ip + port + ttl + parsed_IP_packet["Mensaje"]
+    id = int.to_bytes(parsed_IP_packet["ID"])
+    offset = int.to_bytes(parsed_IP_packet["Offset"], 2)
+    tamaño = int.to_bytes(parsed_IP_packet["Tamaño"], 4)
+    flag = int.to_bytes(parsed_IP_packet["FLAG"])
+
+    return ip + puerto + ttl + id + offset + tamaño + flag + parsed_IP_packet["Mensaje"]
