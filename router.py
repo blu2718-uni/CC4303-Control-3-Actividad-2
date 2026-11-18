@@ -12,9 +12,9 @@ def cargar_rutas(archivo):
     for linea in tabulador(archivo):
         clave = (linea["Red"], linea["Puerto Inicial"], linea["Puerto Final"])
         if clave in rutas:
-            rutas[clave].append((linea["IP Salto"], linea["Puerto Salto"], linea["MTU"]))
+            rutas[clave].append((linea["IP Salto"], linea["Puerto Salto"], int(linea["MTU"])))
         else:
-            rutas[clave] = [(linea["IP Salto"], linea["Puerto Salto"], linea["MTU"])]
+            rutas[clave] = [(linea["IP Salto"], linea["Puerto Salto"], int(linea["MTU"]))]
 
 
 def en_red(ip, red):
@@ -58,7 +58,78 @@ def tabulador(archivo):
     return tabla
 
 def fragment_IP_packet(IP_packet, MTU):
-    pass
+    fragmentos = []
+    
+    if len(IP_packet) <= MTU:
+        fragmentos = [IP_packet]
+        return fragmentos
+        
+    parseado = parse_packet(IP_packet)
+    trozos = parseado["Tamaño"] // (MTU - HEADER_SIZE)
+    
+    if parseado["Tamaño"] % (MTU - HEADER_SIZE) != 0:
+        trozos += 1
+    
+    ultimo = False
+    for i in range(trozos):
+        inicio = i * (MTU - HEADER_SIZE)
+        ultimo = True if i == trozos - 1 else False
+        
+        fragmento = {
+                "IP": parseado["IP"],
+                "Puerto": parseado["Puerto"],
+                "TTL": parseado["TTL"],
+                "ID": parseado["ID"],
+                "Offset": parseado["Offset"] + inicio,
+                "Tamaño": len(parseado["Mensaje"][inicio:inicio + (MTU - HEADER_SIZE)]),
+                "FLAG": 1 if not ultimo else parseado["FLAG"],
+                "Mensaje": parseado["Mensaje"][inicio:inicio + (MTU - HEADER_SIZE)]
+        }
+        
+        fragmentos.append(create_packet(fragmento))
+    
+    return fragmentos
+
+def reassemble_IP_packet(fragment_list):
+    if len(fragment_list) == 1:
+        parsed_fragment = parse_packet(fragment_list[0])
+        fragment_flag = parsed_fragment["FLAG"]
+        fragment_offset = parsed_fragment["Offset"]
+        if fragment_offset == fragment_flag == 0:
+            return fragment_list[0]
+        else:
+            return None
+
+    final_message = b''
+    found = True
+    cont = True
+    i = 0
+    while found and cont:
+        found = False
+        for frag in fragment_list:
+            parsed_fragment = parse_packet(frag)
+            if parsed_fragment["Offset"] == i:
+                found = True
+                i += parsed_fragment["Tamaño"]
+                final_message += parsed_fragment["Mensaje"]
+                if not parsed_fragment["FLAG"]:
+                    cont = False
+                break
+        if not found:
+            return None
+
+    first_parsed = parse_packet(fragment_list[0])
+    packet = {
+        "IP": first_parsed["IP"],
+        "Puerto": first_parsed["Puerto"],
+        "TTL": first_parsed["TTL"],
+        "ID": first_parsed["ID"],
+        "Offset": 0,
+        "Tamaño": len(final_message),
+        "FLAG": 0,
+        "Mensaje": final_message,
+    }
+    return create_packet(packet)
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
@@ -76,6 +147,8 @@ if __name__ == "__main__":
 
     sckt.bind(dir)
 
+    d = {}
+
     while True:
         mensaje, direccion = sckt.recvfrom(BUFFER_SIZE)
         mensaje_parseado = parse_packet(mensaje)
@@ -86,6 +159,14 @@ if __name__ == "__main__":
         elif mensaje_parseado["IP"] == ip and mensaje_parseado["Puerto"] == puerto:
             print(f"Se recibió un mensaje de: {direccion}")
             print(mensaje_parseado["Mensaje"].decode())
+            if f"{mensaje_parseado["ID"]}" in d:
+                d[f"{mensaje_parseado["ID"]}"].append(mensaje)
+            else:
+                d[f"{mensaje_parseado["ID"]}"] = [mensaje]
+            full_packet = reassemble_IP_packet(d[f"{mensaje_parseado["ID"]}"])
+            if full_packet is not None:
+                print(f"Se recibió el mensaje completo: {parse_packet(full_packet)["Mensaje"].decode()}")
+                del d[f"{mensaje_parseado["ID"]}"]
         else:
             print(f"Se recibió un mensaje de: {direccion}")
             siguiente_salto = check_routes(
@@ -97,8 +178,9 @@ if __name__ == "__main__":
                     f"Redirigiendo paquete '{mensaje_parseado['Mensaje'].decode()}' con destino final ('{mensaje_parseado['IP']}', {mensaje_parseado['Puerto']}) desde ('{ip}', {puerto}) hacia {siguiente_salto}"
                 )
                 mensaje_parseado["TTL"] -= 1
-                mensaje_reenviar = create_packet(mensaje_parseado)
-                sckt.sendto(mensaje_reenviar, siguiente_salto)
+                mensaje_reenviar = fragment_IP_packet(create_packet(mensaje_parseado), siguiente_salto[2])
+                for frag in mensaje_reenviar:
+                    sckt.sendto(frag, siguiente_salto[:2])
             else:
                 print(
                     f"No hay rutas hacia ('{mensaje_parseado['IP']}', {mensaje_parseado['Puerto']}) para el paquete '{mensaje_parseado['Mensaje'].decode()}'"
