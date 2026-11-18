@@ -48,7 +48,7 @@ def enviar(ip_final, puerto_final, ttl, mensaje, ip_envio, puerto_envio):
         "IP": ip_final,
         "Puerto": int(puerto_final),
         "TTL": int(ttl),
-        "ID": random.randint(0, 255),  # ID ocupa 1 byte
+        "ID": random.randint(0, 65535),  # ID ocupa 2 bytes
         "Offset": 0,
         "Tamaño": len(mensaje_bytes),
         "FLAG": 0,
@@ -68,13 +68,15 @@ if __name__ == "__main__":
         sys.exit()
 
     ip_final, puerto_final, ttl, mensaje, ip_envio, puerto_envio = sys.argv[1:]
-    # Si se usa test al enviar mensaje se imprimen los mensajes predefinidos en test.py fragmentados para copiar y reemplazar mas abajo, para hacer el test que se desee (enviar por partes, desordenado, etc.)
-    # Por defecto se envian los mensajes en orden, primero 2 fragmentos del mensaje 1, luego el mensaje 2 completo y finalmente lo que falta del mensaje 1
+    # Si se usa test se envian los mensajes predefinidos (message_1 y message_2) fragmentados con MTU 25. Para hacer otro test (enviar por partes, desordenado, etc.) basta con cambiar las listas de fragmentos que se pasan a enviar_test
+    # Por defecto se envian primero 2 fragmentos del mensaje 1, luego el mensaje 2 completo y finalmente lo que falta del mensaje 1
 
     if TEST:
-        enviar_test([b'\x7f\x00\x00\x01"\xb5\xff\x07\x00\x00\x00\x00\x00\n\x01hola esto ', b'\x7f\x00\x00\x01"\xb5\xff\x07\x00\n\x00\x00\x00\n\x01es un mens'], ip_envio, puerto_envio)
-        enviar_test([b'\x7f\x00\x00\x01"\xb5\xff\t\x00\x00\x00\x00\x00\n\x01que pasa g', b'\x7f\x00\x00\x01"\xb5\xff\t\x00\n\x00\x00\x00\n\x01rupo esto ', b'\x7f\x00\x00\x01"\xb5\xff\t\x00\x14\x00\x00\x00\n\x01es otro me', b'\x7f\x00\x00\x01"\xb5\xff\t\x00\x1e\x00\x00\x00\n\x01nsaje larg', b'\x7f\x00\x00\x01"\xb5\xff\t\x00(\x00\x00\x00\x01\x00o'], ip_envio, puerto_envio)
-        enviar_test([b'\x7f\x00\x00\x01"\xb5\xff\x07\x00\x14\x00\x00\x00\n\x01aje de lar', b'\x7f\x00\x00\x01"\xb5\xff\x07\x00\x1e\x00\x00\x00\n\x01go 50, mtu', b'\x7f\x00\x00\x01"\xb5\xff\x07\x00(\x00\x00\x00\n\x00 porte 25.'], ip_envio, puerto_envio)
+        fragmentos_1 = fragment_IP_packet(message_1, 25)
+        fragmentos_2 = fragment_IP_packet(message_2, 25)
+        enviar_test(fragmentos_1[:2], ip_envio, puerto_envio)
+        enviar_test(fragmentos_2, ip_envio, puerto_envio)
+        enviar_test(fragmentos_1[2:], ip_envio, puerto_envio)
     else:
         enviar(ip_final, puerto_final, ttl, mensaje, ip_envio, puerto_envio)
     

@@ -1,3 +1,6 @@
+HEADER_SIZE = 16  # bytes
+
+
 def parse_packet(IP_packet):
     ip_codificada = IP_packet[:4]
     ip_decodificada = ""
@@ -12,11 +15,11 @@ def parse_packet(IP_packet):
         "IP": ip_decodificada,
         "Puerto": int.from_bytes(IP_packet[4:6], "big"),
         "TTL": IP_packet[6],
-        "ID": IP_packet[7],
-        "Offset": int.from_bytes(IP_packet[8:10], "big"),
-        "Tamaño": int.from_bytes(IP_packet[10:14], "big"),
-        "FLAG": IP_packet[14],
-        "Mensaje": IP_packet[15:]
+        "ID": int.from_bytes(IP_packet[7:9], "big"),
+        "Offset": int.from_bytes(IP_packet[9:11], "big"),
+        "Tamaño": int.from_bytes(IP_packet[11:15], "big"),
+        "FLAG": IP_packet[15],
+        "Mensaje": IP_packet[HEADER_SIZE:]
     }
 
     return paquete
@@ -31,7 +34,7 @@ def create_packet(parsed_IP_packet):
 
     puerto = int.to_bytes(parsed_IP_packet["Puerto"], 2)
     ttl = int.to_bytes(parsed_IP_packet["TTL"])
-    id = int.to_bytes(parsed_IP_packet["ID"])
+    id = int.to_bytes(parsed_IP_packet["ID"], 2)
     offset = int.to_bytes(parsed_IP_packet["Offset"], 2)
     tamaño = int.to_bytes(parsed_IP_packet["Tamaño"], 4)
     flag = int.to_bytes(parsed_IP_packet["FLAG"])
