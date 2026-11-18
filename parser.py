@@ -16,7 +16,7 @@ def parse_packet(IP_packet):
         "Offset": int.from_bytes(IP_packet[8:10], "big"),
         "Tamaño": int.from_bytes(IP_packet[10:14], "big"),
         "FLAG": IP_packet[14],
-        "Mensaje": IP_packet[15:],
+        "Mensaje": IP_packet[15:]
     }
 
     return paquete

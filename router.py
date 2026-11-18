@@ -163,7 +163,10 @@ if __name__ == "__main__":
                 d[f"{mensaje_parseado["ID"]}"].append(mensaje)
             else:
                 d[f"{mensaje_parseado["ID"]}"] = [mensaje]
-            print(d)
+            full_packet = reassemble_IP_packet(d[f"{mensaje_parseado["ID"]}"])
+            if full_packet is not None:
+                print(f"Se recibió el mensaje completo: {parse_packet(full_packet)["Mensaje"].decode()}")
+                del d[f"{mensaje_parseado["ID"]}"]
         else:
             print(f"Se recibió un mensaje de: {direccion}")
             siguiente_salto = check_routes(
