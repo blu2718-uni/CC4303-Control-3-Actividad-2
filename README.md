@@ -1,4 +1,4 @@
-# Actividad 2 - Control 3 - Redes
+# [Actividad 2 - Control 3 - Redes](https://github.com/blu2718-uni/CC4303-Control-3-Actividad-2)
 
 > En esta actividad se usó Claude Opus 5.5 para consultas sobre firmas de funciones, funcionamiento de ciertas funciones de Python, gestión del repositorio y _testeo_ del código.
 
